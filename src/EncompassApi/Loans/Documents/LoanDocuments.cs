@@ -15,6 +15,10 @@ namespace EncompassApi.Loans.Documents
     public interface ILoanDocuments : ILoanApiObject
     {
         /// <summary>
+        /// Attach a Response call back
+        /// </summary>
+        event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        /// <summary>
         /// Assigns or unassigns attachments.
         /// </summary>
         /// <param name="documentId">The unique identifier assigned to the document.</param>
