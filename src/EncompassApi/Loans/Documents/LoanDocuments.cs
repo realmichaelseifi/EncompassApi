@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using EncompassApi.Extensions;
@@ -141,6 +143,14 @@ namespace EncompassApi.Loans.Documents
         {
         }
 
+        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        internal override void ApiResponse(HttpResponseMessage response)
+        {
+            if (ApiResponseEventHandler != null)
+            {
+                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+            }
+        }
         /// <inheritdoc/>
         public Task<List<LoanDocument>> GetDocumentsAsync(CancellationToken cancellationToken = default) => GetDirtyListAsync<LoanDocument>(null, null, nameof(GetDocumentsAsync), null, cancellationToken);
 
