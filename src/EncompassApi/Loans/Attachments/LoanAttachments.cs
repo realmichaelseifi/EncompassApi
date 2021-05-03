@@ -15,6 +15,10 @@ namespace EncompassApi.Loans.Attachments
     public interface ILoanAttachments : ILoanApiObject
     {
         /// <summary>
+        /// Attach a Response call back
+        /// </summary>
+        event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        /// <summary>
         /// Downloads the attachment's file contents as a byte array by first getting the download url and then getting the file contents.
         /// </summary>
         /// <param name="attachmentId">Unique identifier assigned to the attachment.</param>
@@ -258,6 +262,15 @@ namespace EncompassApi.Loans.Attachments
         internal LoanAttachments(IEncompassApiClient client, string loanId)
             : base(client, loanId, "attachments")
         {
+        }
+
+        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        internal override void ApiResponse(HttpResponseMessage response)
+        {
+            if (ApiResponseEventHandler != null)
+            {
+                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+            }
         }
 
         /// <inheritdoc/>
