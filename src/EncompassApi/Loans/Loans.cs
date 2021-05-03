@@ -18,6 +18,10 @@ namespace EncompassApi.Loans
     public interface ILoans : IApiObject
     {
         /// <summary>
+        /// An event that occurs when an Api response is received.
+        /// </summary>
+        event EventHandler<IApiResponseEventArgs> ApiResponseEventHandler;
+        /// <summary>
         /// The loan field descriptors.
         /// </summary>
         ILoanFieldDescriptors FieldDescriptors { get; }
@@ -257,14 +261,38 @@ namespace EncompassApi.Loans
     public sealed class Loans : ApiObject, ILoans
     {
         private LoanFieldDescriptors? _fieldDescriptors;
-        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
-        internal override void ApiResponse(HttpResponseMessage response)
+
+        public event EventHandler<ApiResponseEventArgs>? ApiResponseEventHandler;
+        private EventHandler<IApiResponseEventArgs>? _interfaceApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs>? ILoans.ApiResponseEventHandler
         {
-            if (ApiResponseEventHandler != null)
+            add
             {
-                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+                var result = _interfaceApiResponseEventHandler += value;
+                if (result != null)
+                {
+                    ApiResponseEventHandler += InterfaceApiResponse;
+                }
+            }
+            remove
+            {
+                var result = _interfaceApiResponseEventHandler -= value;
+                if (result == null)
+                {
+                    ApiResponseEventHandler -= InterfaceApiResponse;
+                }
             }
         }
+        private void InterfaceApiResponse(object sender, ApiResponseEventArgs e)
+        {
+            _interfaceApiResponseEventHandler?.Invoke(sender, e);
+        }
+
+        public void InvokeApiResponse(HttpResponseMessage response)
+        {
+            ApiResponseEventHandler?.Invoke(this, new ApiResponseEventArgs(response));
+        }
+
         /// <summary>
         /// The loan field descriptors.
         /// </summary>

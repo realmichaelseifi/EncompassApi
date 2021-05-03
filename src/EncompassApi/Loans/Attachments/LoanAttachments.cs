@@ -17,7 +17,7 @@ namespace EncompassApi.Loans.Attachments
         /// <summary>
         /// Attach a Response call back
         /// </summary>
-        event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs> ApiResponseEventHandler;
         /// <summary>
         /// Downloads the attachment's file contents as a byte array by first getting the download url and then getting the file contents.
         /// </summary>
@@ -264,12 +264,46 @@ namespace EncompassApi.Loans.Attachments
         {
         }
 
-        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        public event EventHandler<ApiResponseEventArgs>? ApiResponseEventHandler;
+        private EventHandler<IApiResponseEventArgs>? _interfaceApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs>? ILoanAttachments.ApiResponseEventHandler
+        {
+            add
+            {
+                var result = _interfaceApiResponseEventHandler += value;
+                if (result != null)
+                {
+                    ApiResponseEventHandler += InterfaceApiResponse;
+                }
+            }
+            remove
+            {
+                var result = _interfaceApiResponseEventHandler -= value;
+                if (result == null)
+                {
+                    ApiResponseEventHandler -= InterfaceApiResponse;
+                }
+            }
+        }
+        private void InterfaceApiResponse(object sender, ApiResponseEventArgs e)
+        {
+            _interfaceApiResponseEventHandler?.Invoke(sender, e);
+        }
+
+        public void InvokeApiResponse(HttpResponseMessage response)
+        {
+            ApiResponseEventHandler?.Invoke(this, new ApiResponseEventArgs(response));
+        }
+
         internal override void ApiResponse(HttpResponseMessage response)
         {
             if (ApiResponseEventHandler != null)
             {
-                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+                InvokeApiResponse(response);
+            }
+            else
+            {
+                Client.InvokeApiResponse(response);
             }
         }
 
