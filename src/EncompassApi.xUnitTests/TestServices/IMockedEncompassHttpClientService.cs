@@ -18,7 +18,9 @@ namespace EncompassApi.xUnitTests.TestServices
         IMockedEncompassHttpClientService SetOptions(Action<Mock<IHttpClientOptions>> options);
         IMockedEncompassHttpClientService SetOptions(Mock<IHttpClientOptions> options);
         IMockedEncompassHttpClientService AddDefaultRequestHeaders();
-
+        MockedEncompassHttpClientService SetClientApiResponse(EventHandler<ApiResponseEventArgs> callBack);
         EncompassApi.Webhook.Webhook SetWebhookApiResponseCallback(EventHandler<ApiResponseEventArgs> action);
+        EncompassApi.Loans.Documents.LoanDocuments SetDocumentsApiResponseCallback(string mockedLoanId, EventHandler<ApiResponseEventArgs> action);
+        EncompassApi.Loans.Documents.LoanDocuments GetDocumentsApiAsync(string mockedLoanId);
     }
 }

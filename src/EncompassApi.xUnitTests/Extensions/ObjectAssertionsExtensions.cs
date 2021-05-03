@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Primitives;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +43,14 @@ namespace EncompassApi.xUnitTests.Extensions
             return assert.NotBeNull(because: "object type {0} it must not be null", source.GetType().Name);
         }
 
-
+        public static TObject BeSerializable<TObject>(this ObjectAssertions assert, JObject payload)
+        {
+            // THIS COULD BE REFINED MORE
+            // ....
+            var jsn = payload.ToString();
+            var obj = Newtonsoft.Json.JsonConvert.DeserializeObject<TObject>(jsn);
+            Assert.IsType<TObject>(obj);
+            return obj;
+        }
     }
 }
