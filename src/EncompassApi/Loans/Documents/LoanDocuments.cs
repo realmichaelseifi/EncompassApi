@@ -15,9 +15,9 @@ namespace EncompassApi.Loans.Documents
     public interface ILoanDocuments : ILoanApiObject
     {
         /// <summary>
-        /// Attach a Response call back
+        /// An event that occurs when an Api response is received.
         /// </summary>
-        event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs> ApiResponseEventHandler;
         /// <summary>
         /// Assigns or unassigns attachments.
         /// </summary>
@@ -147,12 +147,47 @@ namespace EncompassApi.Loans.Documents
         {
         }
 
-        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        public event EventHandler<ApiResponseEventArgs>? ApiResponseEventHandler;
+        private EventHandler<IApiResponseEventArgs>? _interfaceApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs>? ILoanDocuments.ApiResponseEventHandler
+        {
+            add
+            {
+                var result = _interfaceApiResponseEventHandler += value;
+                if (result != null)
+                {
+                    ApiResponseEventHandler += InterfaceApiResponse;
+                }
+            }
+            remove
+            {
+                var result = _interfaceApiResponseEventHandler -= value;
+                if (result == null)
+                {
+                    ApiResponseEventHandler -= InterfaceApiResponse;
+                }
+            }
+        }
+        private void InterfaceApiResponse(object sender, ApiResponseEventArgs e)
+        {
+            _interfaceApiResponseEventHandler?.Invoke(sender, e);
+        }
+
+        public void InvokeApiResponse(HttpResponseMessage response)
+        {
+            ApiResponseEventHandler?.Invoke(this, new ApiResponseEventArgs(response));
+        }
+
+
         internal override void ApiResponse(HttpResponseMessage response)
         {
             if (ApiResponseEventHandler != null)
             {
-                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+                InvokeApiResponse(response);
+            }
+            else
+            {
+                Client.InvokeApiResponse(response);
             }
         }
         /// <inheritdoc/>
@@ -256,6 +291,11 @@ namespace EncompassApi.Loans.Documents
             Preconditions.NotNullOrEmpty(queryString, nameof(queryString));
 
             return PatchAsync($"{documentId}/attachments", queryString, new JsonStringContent(attachmentEntities), nameof(AssignDocumentAttachmentsRawAsync), documentId, cancellationToken);
+        }
+
+        internal void Dispose()
+        {
+            
         }
     }
 }
