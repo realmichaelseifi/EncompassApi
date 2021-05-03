@@ -85,12 +85,32 @@ namespace EncompassApi.xUnitTests.TestServices
             return this;
         }
 
+        public MockedEncompassHttpClientService SetClientApiResponse(EventHandler<ApiResponseEventArgs> callBack)
+        {
+            if (callBack != null)
+                MockedEncompassClient.ApiResponse += callBack;
+            return this;
+        }
         public EncompassApi.Webhook.Webhook SetWebhookApiResponseCallback(EventHandler<ApiResponseEventArgs> action)
         {
             MockedEncompassClient.Webhook.ApiResponseEventHandler += action;
             return MockedEncompassClient.Webhook;
-        } 
+        }
 
+        public EncompassApi.Loans.Documents.LoanDocuments SetDocumentsApiResponseCallback(string mockedLoanId, EventHandler<ApiResponseEventArgs> callBack)
+        {
+            var docs = MockedEncompassClient.Loans.GetLoanApis(mockedLoanId).Documents;
+            if (callBack != null)
+                docs.ApiResponseEventHandler += callBack;
+            return docs;
+            
+        }
+
+
+        public EncompassApi.Loans.Documents.LoanDocuments GetDocumentsApiAsync(string mockedLoanId)
+        {
+           return MockedEncompassClient.Loans.GetLoanApis(mockedLoanId).Documents;
+        }
 
         public event EventHandler<ApiResponseEventArgs> MockedEncompassClient_ApiResponse;
        
