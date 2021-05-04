@@ -16,6 +16,10 @@ namespace EncompassApi.Webhook
     public interface IWebhook : IApiObject
     {
         /// <summary>
+        /// An event that occurs when an Api response is received.
+        /// </summary>
+        event EventHandler<IApiResponseEventArgs> ApiResponseEventHandler;
+        /// <summary>
         /// Creates a new subscription for specified Encompass instance and returns the created subscription's id.
         /// </summary>
         /// <param name="subscription">The webhook subscription to create.</param>
@@ -202,11 +206,48 @@ namespace EncompassApi.Webhook
         {
         }
 
-        public event EventHandler<ApiResponseEventArgs> ApiResponseEventHandler;
+        public event EventHandler<ApiResponseEventArgs>? ApiResponseEventHandler;
+        private EventHandler<IApiResponseEventArgs>? _interfaceApiResponseEventHandler;
+        event EventHandler<IApiResponseEventArgs>? IWebhook.ApiResponseEventHandler
+        {
+            add
+            {
+                var result = _interfaceApiResponseEventHandler += value;
+                if (result != null)
+                {
+                    ApiResponseEventHandler += InterfaceApiResponse;
+                }
+            }
+            remove
+            {
+                var result = _interfaceApiResponseEventHandler -= value;
+                if (result == null)
+                {
+                    ApiResponseEventHandler -= InterfaceApiResponse;
+                }
+            }
+        }
+        private void InterfaceApiResponse(object sender, ApiResponseEventArgs e)
+        {
+            _interfaceApiResponseEventHandler?.Invoke(sender, e);
+        }
+
+        public void InvokeApiResponse(HttpResponseMessage response)
+        {
+            ApiResponseEventHandler?.Invoke(this, new ApiResponseEventArgs(response));
+        }
+
+
         internal override void ApiResponse(HttpResponseMessage response)
         {
             if (ApiResponseEventHandler != null)
-                ApiResponseEventHandler(null, new ApiResponseEventArgs(response));
+            {
+                InvokeApiResponse(response);
+            }
+            else
+            {
+                Client.InvokeApiResponse(response);
+            }
         }
 
         /// <inheritdoc/>
